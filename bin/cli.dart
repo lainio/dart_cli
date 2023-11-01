@@ -30,7 +30,6 @@ Future<void> main() async {
   await main2();
   
   print('=============');
-  await main3();
 }
 
 Future<void> main2() async {
@@ -61,27 +60,3 @@ Future<void> main2() async {
   print('signature: $isSignatureCorrect');
 }
 
-Future<void> main3() async {
-  // In this example, we use ECDSA-P256-SHA256
-  final algorithm = Ecdsa.p256(Sha256());
-
-  print(algorithm.keyPairType);
-  // Generate a random key pair
-  final secretKey = await algorithm.newKeyPair();
-  //final secretKey = await algorithm.newSecretKey();
-  //final publicKey = await algorithm.publicKey(secretKey);
-
-  // Sign a message
-  final message = <int>[1,2,3];
-  final signature = await algorithm.sign(
-    [1,2,3],
-    keyPair: secretKey,
-  );
-
-  // Anyone can verify the signature
-  final isVerified = await algorithm.verify(
-    message,
-    signature: signature,
-  );
-  print('signature: $isVerified');
-}
