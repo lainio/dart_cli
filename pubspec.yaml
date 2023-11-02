@@ -8,8 +8,10 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
+  basic_utils: ^5.5.4
   cryptography: ^2.7.0
   dart_wot: ^0.27.1
+  pointycastle: ^3.7.3
   # path: ^1.8.0
 
 dev_dependencies:
