@@ -27,11 +27,9 @@ Future<void> main() async {
   ECPrivateKey? privateKey;
 
   final akp = CryptoUtils.generateEcKeyPair();
-  //final pubKey = akp.publicKey as EcPublicKey;
   final pubKey = akp.publicKey as ECPublicKey;
-//  final x = pubKey.x;
-//  final y = pubKey.y;
   privateKey = akp.privateKey as ECPrivateKey;
+  //privateKey.d.
 
   // some bytes to sign
   //final bytes = Uint8List(0);
@@ -74,7 +72,13 @@ Future<void> main() async {
   ECSignature sig =
       CryptoUtils.ecSign(privateKey, bytes, algorithmName: 'SHA-256/ECDSA');
   final pem = CryptoUtils.encodeEcPublicKeyToPem(pubKey);
-  //final der = CryptoUtils.Der
+  final pemPriv = CryptoUtils.encodeEcPrivateKeyToPem(privateKey);
+  print('pemPriv: $pemPriv');
+  final privData = privateKey.d!;
+  final b64PrivData = base64.encode(CryptoUtils.i2osp(privData));
+  print(b64PrivData);
+  print('privateKey: $privateKey.d');
+  print(privateKey.d!.bitLength);
   final signature2 = CryptoUtils.ecSignatureToBase64(sig);
   print('signature2: $signature2');
 
