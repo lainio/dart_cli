@@ -18,9 +18,9 @@ Future<void> main() async {
   final Base64Codec base64 = const Base64Codec();
 
   base64.normalize(cborKey);
-  print(cborKey);
+  //print(cborKey);
   final ckey = base64.decode(cborKey);
-  print(ckey);
+  //print(ckey);
   cborMy(ckey);
 
   // the private key
@@ -73,16 +73,21 @@ Future<void> main() async {
       CryptoUtils.ecSign(privateKey, bytes, algorithmName: 'SHA-256/ECDSA');
   final pem = CryptoUtils.encodeEcPublicKeyToPem(pubKey);
   final pemPriv = CryptoUtils.encodeEcPrivateKeyToPem(privateKey);
-  print('pemPriv: $pemPriv');
+  //print('pemPriv: $pemPriv');
   final privData = privateKey.d!;
-  final b64PrivData = base64.encode(CryptoUtils.i2osp(privData));
-  print(b64PrivData);
-  print('privateKey: $privateKey.d');
-  print(privateKey.d!.bitLength);
-  final signature2 = CryptoUtils.ecSignatureToBase64(sig);
-  print('signature2: $signature2');
 
+  // TODO: important! conver BigInt to List<int> aka bytest
+  final b64PrivData = base64.encode(CryptoUtils.i2osp(privData));
+  print('=== privData in b64 ====');
+  print(b64PrivData);
   print('======&======');
+
+  //print('privateKey: $privateKey.d');
+  //print(privateKey.d!.bitLength);
+  final signature2 = CryptoUtils.ecSignatureToBase64(sig);
+  //print('signature2: $signature2');
+
+  //print('======&======');
   cborSample(pubKey);
 }
 
@@ -102,10 +107,10 @@ Future<void> main4() async {
     secretKey: secretKey,
     nonce: nonce,
   );
-  print('Ciphertext: ${secretBox.cipherText}');
-  print('MAC: ${secretBox.mac}');
+  //print('Ciphertext: ${secretBox.cipherText}');
+  //print('MAC: ${secretBox.mac}');
 
-  print('=============');
+  //print('=============');
   await main2();
 }
 
@@ -115,8 +120,8 @@ Future<void> main2() async {
   // Generate a key pair
   final keyPair = await algorithm.newKeyPair();
   final e = await keyPair.extractPrivateKeyBytes();
-  print('privatekeybytes');
-  print(e.toString());
+  //print('privatekeybytes');
+  //print(e.toString());
 
   // Sign a message
   final message = <int>[1, 2, 3];
@@ -124,53 +129,61 @@ Future<void> main2() async {
     message,
     keyPair: keyPair,
   );
-  print('Signature bytes: ${signature.bytes}');
-  print('----');
-  print('Public key: ${signature.publicKey.toString()}');
-  print('----');
+  //print('Signature bytes: ${signature.bytes}');
+  //print('----');
+  //print('Public key: ${signature.publicKey.toString()}');
+  //print('----');
 
   // Anyone can verify the signature
   final isSignatureCorrect = await algorithm.verify(
     message,
     signature: signature,
   );
-  print('signature: $isSignatureCorrect');
+  //print('signature: $isSignatureCorrect');
 }
 
 void cborMy(List<int> d) {
   final decoder = CborDecoder();
   decoder.cast();
   final cborData = cborDecode(d);
-  print(cborData);
+  //print(cborData);
   //final siple = CborSimpleValue(cborData);
   final siple = CborValue(cborData);
-  print(siple);
+  //print(siple);
 
   final eCoseK = wot.EncryptedCoseKey.fromValue(cborData);
-  print(eCoseK);
+  //print(eCoseK);
 }
 
+const int crvCOSE = -1;
+const int xCOSE = -2;
+const int yCOSE = -3;
+
 int cborSample(ECPublicKey ecPublicKey) {
+  final bIng = BigInt.parse('1100', radix: 2);
+  //final name = CborInt(bIng);
   final key = wot.CoseKey(
       keyType: wot.KeyType.ec2,
       algorithm: wot.Algorithm.es256,
-      keyId: [ // todo: how we going to name our keys
-        0xDF,
-        0xD1,
-        0xAA,
-        0x97
-      ],
+      //keyId: bIng.serialize(), //[  // TODO: we don't need kid! with fido2
+      // todo: how we going to name our keys
+      // 0xDF,
+      // 0xD1,
+      // 0xAA,
+      // 0x97
+      //],
       parameters: {
         // field "k" (the key itself)
-        -1: CborInt(BigInt.one),
-        -2: CborBigInt(ecPublicKey.Q!.x!.toBigInteger()!),
-        -3: CborBigInt(ecPublicKey.Q!.y!.toBigInteger()!),
+        crvCOSE: CborInt(BigInt.one),
+        xCOSE: CborBigInt(ecPublicKey.Q!.x!.toBigInteger()!),
+        yCOSE: CborBigInt(ecPublicKey.Q!.y!.toBigInteger()!),
       });
-  print('--COSE--');
-  print(key);
+  //print('--COSE--');
+  //print(key);
   final cborBytes = key.serialize();
   final Base64Codec base64 = const Base64Codec();
   final bStr = base64.encode(cborBytes);
+  print('cbor marshalleld cose key in b64:');
   print(bStr);
   return 1;
 }
