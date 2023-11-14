@@ -17,10 +17,7 @@ var cborKey =
 Future<void> main() async {
   final Base64Codec base64 = const Base64Codec();
 
-  base64.normalize(cborKey);
-  //print(cborKey);
   final ckey = base64.decode(cborKey);
-  //print(ckey);
   cborMy(ckey);
 
   // the private key
@@ -120,8 +117,6 @@ Future<void> main2() async {
   // Generate a key pair
   final keyPair = await algorithm.newKeyPair();
   final e = await keyPair.extractPrivateKeyBytes();
-  //print('privatekeybytes');
-  //print(e.toString());
 
   // Sign a message
   final message = <int>[1, 2, 3];
@@ -129,10 +124,6 @@ Future<void> main2() async {
     message,
     keyPair: keyPair,
   );
-  //print('Signature bytes: ${signature.bytes}');
-  //print('----');
-  //print('Public key: ${signature.publicKey.toString()}');
-  //print('----');
 
   // Anyone can verify the signature
   final isSignatureCorrect = await algorithm.verify(
@@ -146,13 +137,9 @@ void cborMy(List<int> d) {
   final decoder = CborDecoder();
   decoder.cast();
   final cborData = cborDecode(d);
-  //print(cborData);
-  //final siple = CborSimpleValue(cborData);
   final siple = CborValue(cborData);
-  //print(siple);
 
   final eCoseK = wot.EncryptedCoseKey.fromValue(cborData);
-  //print(eCoseK);
 }
 
 const int crvCOSE = -1;
@@ -160,30 +147,18 @@ const int xCOSE = -2;
 const int yCOSE = -3;
 
 int cborSample(ECPublicKey ecPublicKey) {
-  final bIng = BigInt.parse('1100', radix: 2);
-  //final name = CborInt(bIng);
   final key = wot.CoseKey(
       keyType: wot.KeyType.ec2,
       algorithm: wot.Algorithm.es256,
-      //keyId: bIng.serialize(), //[  // TODO: we don't need kid! with fido2
-      // todo: how we going to name our keys
-      // 0xDF,
-      // 0xD1,
-      // 0xAA,
-      // 0x97
-      //],
       parameters: {
-        // field "k" (the key itself)
         crvCOSE: CborInt(BigInt.one),
         xCOSE: CborBigInt(ecPublicKey.Q!.x!.toBigInteger()!),
         yCOSE: CborBigInt(ecPublicKey.Q!.y!.toBigInteger()!),
       });
-  //print('--COSE--');
-  //print(key);
   final cborBytes = key.serialize();
   final Base64Codec base64 = const Base64Codec();
   final bStr = base64.encode(cborBytes);
-  print('cbor marshalleld cose key in b64:');
+  print('cbor marshalled cose key in b64:');
   print(bStr);
   return 1;
 }
