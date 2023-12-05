@@ -1,4 +1,4 @@
-import 'package:cryptography/cryptography.dart';
+//import 'package:cryptography/cryptography.dart';
 import 'package:dart_wot/dart_wot.dart' as wot;
 
 import 'dart:convert';
@@ -17,23 +17,44 @@ var cborKey =
 Future<void> main() async {
   final Base64Codec base64 = const Base64Codec();
 
-  final ckey = base64.decode(cborKey);
-  cborMy(ckey);
-
   // the private key
   ECPrivateKey? privateKey;
 
-  final akp = CryptoUtils.generateEcKeyPair();
+  final String curve = 'prime256v1';
+  final akp = CryptoUtils.generateEcKeyPair(curve: curve);
+
   final pubKey = akp.publicKey as ECPublicKey;
   privateKey = akp.privateKey as ECPrivateKey;
-  //privateKey.d.
-
-  // some bytes to sign
-  //final bytes = Uint8List(0);
 
   final url = 'My URL string...';
   //Convert the URL string to Uint8List
   final bytes = utf8.encode(url);
+
+  final pemFullKey = CryptoUtils.encodeEcPrivateKeyToPem(privateKey);
+  final pemPub = CryptoUtils.encodeEcPublicKeyToPem(pubKey);
+  print('pemFullKey.length = ${pemFullKey.length}');
+  final b64FullKey = base64.encode(utf8.encode(pemFullKey));
+  print(utf8.decode(base64.decode(b64FullKey)) == pemFullKey);
+  print('b64FullKey.length = ${b64FullKey.length}');
+  print('pemFullKey= $pemFullKey');
+  print('pemPub.length = ${pemPub.length}');
+  var ok = testSignature2(privateKey, pemPub, bytes);
+  print('==> ok = $ok');
+
+  ok = testSignature(pemFullKey, pemPub, bytes);
+  print('==> ok = $ok');
+
+  final comb = pemFullKey+'\n'+pemPub;
+
+  print(comb);
+  ok = testSignature3(comb, bytes);
+  print('merge => ok = $ok');
+
+  return;
+  //privateKey.d.
+
+  // some bytes to sign
+  //final bytes = Uint8List(0);
 
   // a suitable random number generator - create it just once and reuse
   final rand = Random.secure();
@@ -64,17 +85,17 @@ Future<void> main() async {
   ]).encode();
 
   // and finally base 64 encode it
-  //final signature = base64UrlEncode(encoded);
+//final signature = base64UrlEncode(encoded);
 
   ECSignature sig =
       CryptoUtils.ecSign(privateKey, bytes, algorithmName: 'SHA-256/ECDSA');
-  final pem = CryptoUtils.encodeEcPublicKeyToPem(pubKey);
+  //final pem = CryptoUtils.encodeEcPublicKeyToPem(pubKey);
   final pemPriv = CryptoUtils.encodeEcPrivateKeyToPem(privateKey);
-  //print('pemPriv: $pemPriv');
+  print('pemPriv: $pemPriv');
   final privData = privateKey.d!;
 
-  // TODO: important! conver BigInt to List<int> aka bytest
   final b64PrivData = base64.encode(CryptoUtils.i2osp(privData));
+  
   print('=== privData in b64 ====');
   print(b64PrivData);
   print('======&======');
@@ -82,64 +103,10 @@ Future<void> main() async {
   //print('privateKey: $privateKey.d');
   //print(privateKey.d!.bitLength);
   final signature2 = CryptoUtils.ecSignatureToBase64(sig);
-  //print('signature2: $signature2');
+  print('signature2: $signature2');
 
   //print('======&======');
   cborSample(pubKey);
-}
-
-Future<void> main4() async {
-  final algorithm = AesGcm.with256bits();
-
-  // Generate a random 256-bit secret key
-  final secretKey = await algorithm.newSecretKey();
-
-  // Generate a random 96-bit nonce.
-  final nonce = algorithm.newNonce();
-
-  // Encrypt
-  final clearText = [1, 2, 3];
-  final secretBox = await algorithm.encrypt(
-    clearText,
-    secretKey: secretKey,
-    nonce: nonce,
-  );
-  //print('Ciphertext: ${secretBox.cipherText}');
-  //print('MAC: ${secretBox.mac}');
-
-  //print('=============');
-  await main2();
-}
-
-Future<void> main2() async {
-  final algorithm = Ed25519();
-
-  // Generate a key pair
-  final keyPair = await algorithm.newKeyPair();
-  final e = await keyPair.extractPrivateKeyBytes();
-
-  // Sign a message
-  final message = <int>[1, 2, 3];
-  final signature = await algorithm.sign(
-    message,
-    keyPair: keyPair,
-  );
-
-  // Anyone can verify the signature
-  final isSignatureCorrect = await algorithm.verify(
-    message,
-    signature: signature,
-  );
-  //print('signature: $isSignatureCorrect');
-}
-
-void cborMy(List<int> d) {
-  final decoder = CborDecoder();
-  decoder.cast();
-  final cborData = cborDecode(d);
-  final siple = CborValue(cborData);
-
-  final eCoseK = wot.EncryptedCoseKey.fromValue(cborData);
 }
 
 const int crvCOSE = -1;
@@ -153,12 +120,67 @@ int cborSample(ECPublicKey ecPublicKey) {
       parameters: {
         crvCOSE: CborInt(BigInt.one),
         xCOSE: CborBigInt(ecPublicKey.Q!.x!.toBigInteger()!),
-        yCOSE: CborBigInt(ecPublicKey.Q!.y!.toBigInteger()!),
-      });
+      yCOSE: CborBigInt(ecPublicKey.Q!.y!.toBigInteger()!),
+    });
   final cborBytes = key.serialize();
   final Base64Codec base64 = const Base64Codec();
   final bStr = base64.encode(cborBytes);
   print('cbor marshalled cose key in b64:');
   print(bStr);
   return 1;
+}
+
+  AsymmetricKeyPair generateEcKeyPair({String curve = 'prime256v1'}) {
+  var ecDomainParameters = ECDomainParameters(curve);
+    var keyParams = ECKeyGeneratorParameters(ecDomainParameters);
+
+    var secureRandom = CryptoUtils.getSecureRandom();
+
+    var rngParams = ParametersWithRandom(keyParams, secureRandom);
+    var generator = ECKeyGenerator();
+    generator.init(rngParams);
+     
+
+    return generator.generateKeyPair();
+  }
+
+bool testSignature(String pemPriv, String pemPub, Uint8List bytes) {
+  final privateKey = CryptoUtils.ecPrivateKeyFromPem(pemPriv);
+  final tmpPubKey = CryptoUtils.ecPublicKeyFromPem(pemPub);
+  ECSignature sig =
+      CryptoUtils.ecSign(privateKey, bytes, algorithmName: 'SHA-256/ECDSA');
+  return CryptoUtils.ecVerify(tmpPubKey, bytes, sig, algorithm: 'SHA-256/ECDSA');
+}
+
+bool testSignature2(ECPrivateKey privateKey, String pemPub, Uint8List bytes) {
+  final tmpPubKey = CryptoUtils.ecPublicKeyFromPem(pemPub);
+  ECSignature sig =
+      CryptoUtils.ecSign(privateKey, bytes, algorithmName: 'SHA-256/ECDSA');
+  return CryptoUtils.ecVerify(tmpPubKey, bytes, sig, algorithm: 'SHA-256/ECDSA');
+}
+
+bool testSignature3(String comb, Uint8List bytes) {
+  Iterable<String> l = LineSplitter.split(comb);
+  String pemPriv = '';
+  String pemPub = '';
+  bool pub = false;
+
+  l.forEach((e) {
+      if (CryptoUtils.BEGIN_PUBLIC_KEY == e) {
+        print('change');
+        pub = true;
+      }
+      if (pub) {
+        pemPub += e+'\n';
+      } else {
+        pemPriv += e+'\n';
+      }
+  });
+  print('pemPriv: $pemPriv');
+  print('pemPub: $pemPub');
+  final privateKey = CryptoUtils.ecPrivateKeyFromPem(pemPriv);
+  final tmpPubKey = CryptoUtils.ecPublicKeyFromPem(pemPub);
+  ECSignature sig =
+      CryptoUtils.ecSign(privateKey, bytes, algorithmName: 'SHA-256/ECDSA');
+  return CryptoUtils.ecVerify(tmpPubKey, bytes, sig, algorithm: 'SHA-256/ECDSA');
 }
