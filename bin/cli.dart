@@ -106,43 +106,8 @@ Future<void> main() async {
   print('signature2: $signature2');
 
   //print('======&======');
-  cborSample(pubKey);
 }
 
-const int crvCOSE = -1;
-const int xCOSE = -2;
-const int yCOSE = -3;
-
-int cborSample(ECPublicKey ecPublicKey) {
-  final key = wot.CoseKey(
-      keyType: wot.KeyType.ec2,
-      algorithm: wot.Algorithm.es256,
-      parameters: {
-        crvCOSE: CborInt(BigInt.one),
-        xCOSE: CborBigInt(ecPublicKey.Q!.x!.toBigInteger()!),
-      yCOSE: CborBigInt(ecPublicKey.Q!.y!.toBigInteger()!),
-    });
-  final cborBytes = key.serialize();
-  final Base64Codec base64 = const Base64Codec();
-  final bStr = base64.encode(cborBytes);
-  print('cbor marshalled cose key in b64:');
-  print(bStr);
-  return 1;
-}
-
-  AsymmetricKeyPair generateEcKeyPair({String curve = 'prime256v1'}) {
-  var ecDomainParameters = ECDomainParameters(curve);
-    var keyParams = ECKeyGeneratorParameters(ecDomainParameters);
-
-    var secureRandom = CryptoUtils.getSecureRandom();
-
-    var rngParams = ParametersWithRandom(keyParams, secureRandom);
-    var generator = ECKeyGenerator();
-    generator.init(rngParams);
-     
-
-    return generator.generateKeyPair();
-  }
 
 bool testSignature(String pemPriv, String pemPub, Uint8List bytes) {
   final privateKey = CryptoUtils.ecPrivateKeyFromPem(pemPriv);
