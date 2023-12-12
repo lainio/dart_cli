@@ -1,7 +1,7 @@
 import 'dart:convert';
 
+import 'package:cli/src/generated/authn.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
-import 'package:helloworld/src/generated/authn.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart'; // NOTE. for Int64
 
 import 'package:basic_utils/basic_utils.dart';
@@ -122,6 +122,7 @@ Future<void> exec(List<String> args) async {
 
   final cmd = args[0];
   final name = args[1];
+  print('cmd: $cmd, name: $name');
 
   final myCMD = cmd == 'login' ? Cmd_Type.LOGIN : Cmd_Type.REGISTER;
 

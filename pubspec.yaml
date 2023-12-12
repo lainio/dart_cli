@@ -12,6 +12,7 @@ dependencies:
   cbor: ^5.1.2
   cryptography: ^2.7.0
   dart_wot: ^0.27.1
+  fixnum: ^1.1.0
   grpc:
     path: /home/parallels/go/src/github.com/grpc/grpc-dart
   pointycastle: ^3.7.3

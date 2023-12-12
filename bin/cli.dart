@@ -1,4 +1,5 @@
-import 'package:cryptography/cryptography.dart';
+import 'package:cli/auth_client.dart';
+import 'package:cli/cli.dart';
 
 import 'dart:convert';
 import 'dart:math';
@@ -42,11 +43,16 @@ Future<void> main() async {
   ok = testSignature(pemFullKey, pemPub, bytes);
   print('==> ok = $ok');
 
-  final comb = pemFullKey+'\n'+pemPub;
+  final comb = '$pemFullKey\n$pemPub';
 
   print(comb);
   ok = testSignature3(comb, bytes);
   print('merge => ok = $ok');
+
+  final calVal = calculate();
+  print(calVal);
+  
+  exec(["register", "tmp-man"]);
 
   return;
   //privateKey.d.
