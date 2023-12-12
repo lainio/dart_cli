@@ -102,7 +102,7 @@ class Handle {
 
 Handle? myHandle;
 
-Future<void> main(List<String> args) async {
+Future<void> exec(List<String> args) async {
   final channel = ClientChannel(
     'localhost',
     port: 50053,

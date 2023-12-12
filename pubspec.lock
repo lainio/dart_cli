@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.3.0"
+  archive:
+    dependency: transitive
+    description:
+      name: archive
+      sha256: "7b875fd4a20b165a3084bd2d210439b22ebc653f21cea4842729c0c30c82596b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.4.9"
   args:
     dependency: transitive
     description:
@@ -65,6 +73,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.1.2"
+  clock:
+    dependency: transitive
+    description:
+      name: clock
+      sha256: cb6d7f03e1de671e34607e909a7213e31d7752be4fb66a86d29fe1eb14bfb5cf
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   coap:
     dependency: transitive
     description:
@@ -169,6 +185,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.0"
+  fixnum:
+    dependency: transitive
+    description:
+      name: fixnum
+      sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   frontend_server_client:
     dependency: transitive
     description:
@@ -185,6 +209,21 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  googleapis_auth:
+    dependency: transitive
+    description:
+      name: googleapis_auth
+      sha256: af7c3a3edf9d0de2e1e0a77e994fae0a581c525fa7012af4fa0d4a52ed9484da
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.1"
+  grpc:
+    dependency: "direct main"
+    description:
+      path: "/home/parallels/go/src/github.com/grpc/grpc-dart"
+      relative: false
+    source: path
+    version: "3.2.4"
   hex:
     dependency: transitive
     description:
@@ -201,6 +240,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.6"
+  http2:
+    dependency: transitive
+    description:
+      name: http2
+      sha256: "38db0c4aa9f1cd238a5d2e86aa0cc7cc91c77e0c6c94ba64bbe85e4ff732a952"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   http_auth:
     dependency: transitive
     description:
@@ -361,6 +408,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.1"
+  protobuf:
+    dependency: "direct overridden"
+    description:
+      name: protobuf
+      sha256: "68645b24e0716782e58948f8467fd42a880f255096a821f9e7d0ec625b00c84d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
   pub_semver:
     dependency: transitive
     description:

@@ -1,5 +1,4 @@
-//import 'package:cryptography/cryptography.dart';
-import 'package:dart_wot/dart_wot.dart' as wot;
+import 'package:cryptography/cryptography.dart';
 
 import 'dart:convert';
 import 'dart:math';
@@ -9,7 +8,6 @@ import 'package:pointycastle/asn1.dart';
 import 'package:pointycastle/export.dart';
 
 import 'package:basic_utils/basic_utils.dart';
-import 'package:cbor/cbor.dart';
 
 var cborKey =
     'pQECAyYgASFYIIcEZtPD-t7SgrBCqo8DmkzK-5hPRC7Agr9-4w2Egc3EIlggArnWSfgKmTTjWiOvtNu9Ck7jJDJpVJvff7CX_xQhzbk=';
