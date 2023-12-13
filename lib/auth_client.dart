@@ -102,7 +102,7 @@ class Handle {
 
 Handle? myHandle;
 
-Future<void> exec(List<String> args) async {
+Future<void> exec(String cmd, name) async {
   final channel = ClientChannel(
     'localhost',
     port: 50053,
@@ -114,15 +114,6 @@ Future<void> exec(List<String> args) async {
     ),
   );
   final stub = AuthnServiceClient(channel);
-
-  if (args.length != 2) {
-    print('Usage: <login/register> <name>');
-    return;
-  }
-
-  final cmd = args[0];
-  final name = args[1];
-  print('cmd: $cmd, name: $name');
 
   final myCMD = cmd == 'login' ? Cmd_Type.LOGIN : Cmd_Type.REGISTER;
 
