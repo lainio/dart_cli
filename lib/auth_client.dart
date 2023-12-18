@@ -8,9 +8,10 @@ import 'package:basic_utils/basic_utils.dart';
 import 'package:cbor/cbor.dart';
 import 'dart:typed_data';
 
-const keyId = 2;
-
 final String curve = 'prime256v1';
+Int64 keyHandleId = Int64(1);
+
+Xorel? seal;
 
 class PemPair {
   String? pemPub;
@@ -55,25 +56,45 @@ class PemPair {
   }
 }
 
+class Xorel {
+  int salt = 56;
+  int key;
+
+  Xorel(this.key, {this.salt=0});
+
+  Uint8List xor(Uint8List d) {
+    Uint8List xorData = Uint8List(d.length);
+    int i = 0;
+    for (var e in d) {
+      xorData[i++] = e ^ (salt + key); 
+    }
+    return xorData;
+  }
+}
+
 class Handle {
   Int64 id;
   ECPrivateKey? privateKey;
-  List<int>? data;
+  List<int>? _data; // is credID todo: rename?
   ECPublicKey? publicKey;
 
-  Handle.load(Uint8List d) : id = Int64(keyId) {
-    final kp = PemPair.load(d);
+  // should we rename to Xor todo: or XorData
+  Uint8List get credID => seal!.xor(_data! as Uint8List);
+
+  Handle.load(Uint8List d) : id = keyHandleId {
+    var credData = seal!.xor(d);
+    final kp = PemPair.load(credData);
     privateKey = kp.privateKey;
     publicKey = kp.publicKey;
-    data = d;
+    _data = d;
   }
 
-  Handle() : id = Int64(keyId) {
+  Handle() : id = keyHandleId {
     final akp = PemPair.generate();
 
     privateKey = akp.privateKey;
     publicKey = akp.publicKey;
-    data = akp.data;
+    _data = akp.data;
   }
 
   List<int> toCbor() {
@@ -102,7 +123,7 @@ class Handle {
 
 Handle? myHandle;
 
-Future<void> exec(String cmd, name) async {
+Future<void> exec(String cmd, name, xorKey) async {
   final channel = ClientChannel(
     'localhost',
     port: 50053,
@@ -116,6 +137,11 @@ Future<void> exec(String cmd, name) async {
   final stub = AuthnServiceClient(channel);
 
   final myCMD = cmd == 'login' ? Cmd_Type.LOGIN : Cmd_Type.REGISTER;
+  final keyHandleID = Int64(1);
+  seal = Xorel(int.parse(xorKey));
+  keyHandleId = keyHandleID;
+
+  print('keyHandleID: $keyHandleID');
 
   var jwt = '';
 
@@ -145,7 +171,7 @@ Future<void> exec(String cmd, name) async {
 
           switch (cmdStat.secType) {
             case SecretMsg_Type.IS_KEY_HANDLE:
-              final myID = Int64(keyId);
+              final myID = keyHandleId;
               final credID = cmdStat.enclave.credID as Uint8List;
               assert(myHandle == null);
               myHandle = Handle.load(credID);
@@ -158,7 +184,7 @@ Future<void> exec(String cmd, name) async {
 
             case SecretMsg_Type.CBOR_PUB_KEY:
               final handleID = cmdStat.handle.iD;
-              assert(handleID == 2);
+              assert(handleID != 0);
               assert(myHandle != null);
               final handle = myHandle!;
               final keyData = handle.toCbor();
@@ -169,11 +195,11 @@ Future<void> exec(String cmd, name) async {
               break;
 
             case SecretMsg_Type.NEW_HANDLE:
-              final myID = Int64(keyId);
+              final myID = keyHandleId;
               assert(myHandle == null);
               myHandle = Handle();
               final handle = myHandle!;
-              final keyData = handle.data;
+              final keyData = handle.credID;
               stub.enterSecret(SecretMsg(
                   cmdID: cmdStat.cmdID,
                   type: cmdStat.secType,
@@ -182,9 +208,9 @@ Future<void> exec(String cmd, name) async {
 
             case SecretMsg_Type.ID:
               final handleID = cmdStat.handle.iD;
-              assert(handleID == 2);
+              assert(handleID != 0);
               final handle = myHandle!;
-              final keyData = handle.data;
+              final keyData = handle.credID;
               stub.enterSecret(SecretMsg(
                   cmdID: cmdStat.cmdID,
                   type: cmdStat.secType,
@@ -194,7 +220,7 @@ Future<void> exec(String cmd, name) async {
             case SecretMsg_Type.SIGN:
               final handleID = cmdStat.handle.iD;
               final toSignData = cmdStat.handle.data;
-              assert(handleID == 2);
+              assert(handleID != 0);
               final handle = myHandle!;
               final signData = handle.sign(toSignData);
               stub.enterSecret(SecretMsg(
