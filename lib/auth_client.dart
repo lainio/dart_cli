@@ -32,21 +32,21 @@ class PemPair {
 
   PemPair.load(Uint8List d) {
     final strData = utf8.decode(d);
-    
+
     final lines = LineSplitter.split(strData);
     var pemPrivStr = '';
     var pemPubStr = '';
     var pub = false;
 
     for (var lineStr in lines) {
-        if (CryptoUtils.BEGIN_PUBLIC_KEY == lineStr) {
-          pub = true;
-        }
-        if (pub) {
-          pemPubStr += '$lineStr\n';
-        } else {
-          pemPrivStr += '$lineStr\n';
-        }
+      if (CryptoUtils.BEGIN_PUBLIC_KEY == lineStr) {
+        pub = true;
+      }
+      if (pub) {
+        pemPubStr += '$lineStr\n';
+      } else {
+        pemPrivStr += '$lineStr\n';
+      }
     }
     pemPriv = pemPrivStr;
     pemPub = pemPubStr;
@@ -60,13 +60,13 @@ class Xorel {
   int salt = 56;
   int key;
 
-  Xorel(this.key, {this.salt=0});
+  Xorel(this.key, {this.salt = 0});
 
   Uint8List xor(Uint8List d) {
     Uint8List xorData = Uint8List(d.length);
     int i = 0;
     for (var e in d) {
-      xorData[i++] = e ^ (salt + key); 
+      xorData[i++] = e ^ (salt + key);
     }
     return xorData;
   }
