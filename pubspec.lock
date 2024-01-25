@@ -186,7 +186,7 @@ packages:
     source: hosted
     version: "7.0.0"
   fixnum:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: fixnum
       sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"
@@ -220,9 +220,10 @@ packages:
   grpc:
     dependency: "direct main"
     description:
-      path: "/home/parallels/go/src/github.com/grpc/grpc-dart"
-      relative: false
-    source: path
+      name: grpc
+      sha256: e93ee3bce45c134bf44e9728119102358c7cd69de7832d9a874e2e74eb8cab40
+      url: "https://pub.dev"
+    source: hosted
     version: "3.2.4"
   hex:
     dependency: transitive
