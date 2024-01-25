@@ -13,7 +13,8 @@ Future<void> main(List<String> args) async {
   final pin = args[2];
   print('cmd: $cmd, name: $name, keyID: $pin');
 
-  exec(cmd, name, pin);
+  final jwt = await exec(cmd, name, pin);
+  print(jwt);
 
   return;
 }

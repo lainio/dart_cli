@@ -123,7 +123,7 @@ class Handle {
 
 Handle? myHandle;
 
-Future<void> exec(String cmd, name, xorKey) async {
+Future<String> exec(String cmd, name, xorKey) async {
   final channel = ClientChannel(
     'localhost',
     port: 50053,
@@ -241,7 +241,7 @@ Future<void> exec(String cmd, name, xorKey) async {
     print('Caught error: $e');
   }
   await channel.shutdown();
-  print(jwt);
+  return jwt;
 }
 
 const int crvCOSE = -1;
