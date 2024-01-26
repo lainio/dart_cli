@@ -1,6 +1,8 @@
 name: cli
 description: A sample command-line application.
 version: 1.0.0
+publish_to: none
+
 # repository: https://github.com/my_org/my_repo
 
 environment:
@@ -17,6 +19,11 @@ dependencies:
     # path: /home/parallels/go/src/github.com/grpc/grpc-dart
   grpc: ^3.2.4
   pointycastle: ^3.7.3
+  authn:
+    path: packages/authn
+#    path: /home/parallels/go/src/github.com/lainio/dart_cli/packages/authn
+
+
   # path: ^1.8.0
 
 dev_dependencies:

@@ -1,4 +1,5 @@
-import 'package:cli/auth_client.dart';
+//import 'package:cli/auth_client.dart';
+import 'package:authn/authn.dart';
 
 const neededArgsSize = 3;
 
@@ -13,7 +14,7 @@ Future<void> main(List<String> args) async {
   final pin = args[2];
   print('cmd: $cmd, name: $name, keyID: $pin');
 
-  final jwt = await exec(cmd, name, pin);
+  final jwt = await authnCmd(cmd, name, pin);
   print(jwt);
 
   return;
