@@ -173,7 +173,6 @@ Future<String> exec(String cmd, name, xorKey) async {
             case SecretMsg_Type.IS_KEY_HANDLE:
               final myID = keyHandleId;
               final credID = cmdStat.enclave.credID as Uint8List;
-              assert(myHandle == null);
               myHandle = Handle.load(credID);
               assert(myHandle != null);
               stub.enterSecret(SecretMsg(
@@ -196,7 +195,6 @@ Future<String> exec(String cmd, name, xorKey) async {
 
             case SecretMsg_Type.NEW_HANDLE:
               final myID = keyHandleId;
-              assert(myHandle == null);
               myHandle = Handle();
               final handle = myHandle!;
               final keyData = handle.credID;
