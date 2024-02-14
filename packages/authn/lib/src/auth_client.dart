@@ -143,7 +143,7 @@ Future<String> exec(String cmd, name, xorKey) async {
 
   print('keyHandleID: $keyHandleID');
 
-  var jwt = '';
+  var tokenPayload = '';
 
   try {
     await for (var cmdStat in stub.enter(
@@ -158,7 +158,7 @@ Future<String> exec(String cmd, name, xorKey) async {
       print('status msg arrives: ${cmdStat.type}');
       switch (cmdStat.type) {
         case CmdStatus_Type.READY_OK:
-          jwt = cmdStat.ok.jWT;
+          tokenPayload = cmdStat.ok.jWT;
           break;
         case CmdStatus_Type.READY_ERR:
           final msg = cmdStat.err;
@@ -239,6 +239,9 @@ Future<String> exec(String cmd, name, xorKey) async {
     print('Caught error: $e');
   }
   await channel.shutdown();
+
+  final token = jsonDecode(tokenPayload);
+  final jwt = token['token'] as String;
   return jwt;
 }
 
