@@ -12,7 +12,6 @@ dependencies:
   basic_utils: ^5.5.4
   cbor: ^5.1.2
   cryptography: ^2.7.0
-  dart_wot: ^0.27.1
   fixnum: ^1.1.0
   grpc: ^3.2.4
 
