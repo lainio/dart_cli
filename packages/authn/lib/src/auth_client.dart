@@ -8,8 +8,19 @@ import 'package:basic_utils/basic_utils.dart';
 import 'package:cbor/cbor.dart';
 import 'dart:typed_data';
 
+import 'dart:async';
+import 'dart:io';
+
 const String curve = 'prime256v1';
 Int64 keyHandleId = Int64(1);
+
+// --- memory vales ---
+// URL: to contact aka WebAuthn server
+// aAGUID: our authn ID
+// salt: for pin code
+
+// --- clean up ---
+// what happens when ..
 
 Xorel? seal;
 
@@ -123,18 +134,97 @@ class Handle {
 
 Handle? myHandle;
 
+class ClientCertificateChannelCredentials extends ChannelCredentials {
+  final List<int> _cert;
+  final List<int> _key;
+  final String _pass;
+
+  ClientCertificateChannelCredentials(
+    this._cert,
+    this._key,
+    this._pass,
+  ) : super.secure();
+//    onBadCertificate: (cert, s) {
+//        return true;
+//      });
+
+  @override
+  SecurityContext get securityContext {
+    return SecurityContext(withTrustedRoots: true)
+      ..useCertificateChainBytes(_cert)
+      ..usePrivateKeyBytes(_key, password: _pass)
+      ..setAlpnProtocols(supportedAlpnProtocols, false);
+  }
+}
+
+const keyPath =
+    '/home/parallels/go/src/github.com/findy-network/cert/server/server.key';
+const certPath =
+    '/home/parallels/go/src/github.com/findy-network/cert/server/server.crt';
+const clientKeyPath =
+    '/home/parallels/go/src/github.com/findy-network/cert/client/client.key';
+const clientCertPath =
+    '/home/parallels/go/src/github.com/findy-network/cert/client/client.crt';
+
+// '/home/parallels/go/src/github.com/findy-network/cert/client/client.crt';
+
+Future<Uint8List> readCert() async {
+  // todo: not used at the moment
+  final File f = File('cert.pem');
+  final bytes = await f.readAsBytes();
+  return bytes;
+}
+
+class SecurityContextChannelCredentials extends ChannelCredentials {
+  final SecurityContext _securityContext;
+
+  SecurityContextChannelCredentials(SecurityContext securityContext,
+      {super.authority, super.onBadCertificate})
+      : _securityContext = securityContext,
+        super.secure();
+
+  @override
+  SecurityContext get securityContext => _securityContext;
+
+  static SecurityContext baseSecurityContext() {
+    return createSecurityContext(false);
+  }
+}
+
 Future<String> exec(String cmd, name, xorKey) async {
+  print(certPath);
+  final cert = File(certPath).readAsBytesSync();
+  final key = File(keyPath).readAsBytesSync();
+  final clientCert = File(clientCertPath).readAsBytesSync();
+  final clientKey = File(clientKeyPath).readAsBytesSync();
+  print(cert);
+
+    final channelContext =
+        SecurityContextChannelCredentials.baseSecurityContext();
+    channelContext.useCertificateChain('test/data/localhost.crt');
+    channelContext.usePrivateKey('test/data/localhost.key');
+    final channelCredentials = SecurityContextChannelCredentials(channelContext,
+        onBadCertificate: (cert, s) {
+      return true;
+    });
   final channel = ClientChannel(
-    'localhost',
-    port: 50053,
+    'localhost', // todo: address to Translator
+    port: 50051,
     options: ChannelOptions(
-      credentials: const ChannelCredentials.insecure(),
+//      credentials: ClientCertificateChannelCredentials(cert, key, ''),
+      credentials: ChannelCredentials.secure(
+//        certificates: cert, //File(certPath).readAsBytesSync(),
+//        authority: 'localhost',
+//        password: '',
+        onBadCertificate: allowBadCertificates,
+      ),
       codecRegistry:
           CodecRegistry(codecs: const [GzipCodec(), IdentityCodec()]),
       //CodecRegistry(codecs: const [GzipCodec()]),
     ),
   );
-  final stub = AuthnServiceClient(channel);
+  final stub = AuthnServiceClient(channel,
+      options: CallOptions(timeout: Duration(seconds: 5)));
 
   final myCMD = cmd == 'login' ? Cmd_Type.LOGIN : Cmd_Type.REGISTER;
   final keyHandleID = Int64(1);
@@ -145,7 +235,9 @@ Future<String> exec(String cmd, name, xorKey) async {
 
   var tokenPayload = '';
 
+  var callOps = CallOptions(compression: GzipCodec());
   try {
+    print('for starts');
     await for (var cmdStat in stub.enter(
       Cmd(
         type: myCMD, //type: Cmd_Type.REGISTER,
@@ -153,6 +245,7 @@ Future<String> exec(String cmd, name, xorKey) async {
         uRL: 'http://localhost:8090', // todo: argument/var
         aAGUID: '12c85a48-4baf-47bd-b51f-f192871a1511', // todo: argument/var
       ),
+      options: callOps,
       //options: CallOptions(compression: const GzipCodec()), // this works!!
     )) {
       print('status msg arrives: ${cmdStat.type}');
