@@ -134,29 +134,6 @@ class Handle {
 
 Handle? myHandle;
 
-class ClientCertificateChannelCredentials extends ChannelCredentials {
-  final List<int> _cert;
-  final List<int> _key;
-  final String _pass;
-
-  ClientCertificateChannelCredentials(
-    this._cert,
-    this._key,
-    this._pass,
-  ) : super.secure();
-//    onBadCertificate: (cert, s) {
-//        return true;
-//      });
-
-  @override
-  SecurityContext get securityContext {
-    return SecurityContext(withTrustedRoots: true)
-      ..useCertificateChainBytes(_cert)
-      ..usePrivateKeyBytes(_key, password: _pass)
-      ..setAlpnProtocols(supportedAlpnProtocols, false);
-  }
-}
-
 const keyPath =
     '/home/parallels/go/src/github.com/findy-network/cert/server/server.key';
 const certPath =
@@ -167,13 +144,6 @@ const clientCertPath =
     '/home/parallels/go/src/github.com/findy-network/cert/client/client.crt';
 
 // '/home/parallels/go/src/github.com/findy-network/cert/client/client.crt';
-
-Future<Uint8List> readCert() async {
-  // todo: not used at the moment
-  final File f = File('cert.pem');
-  final bytes = await f.readAsBytes();
-  return bytes;
-}
 
 class SecurityContextChannelCredentials extends ChannelCredentials {
   final SecurityContext _securityContext;
@@ -192,36 +162,23 @@ class SecurityContextChannelCredentials extends ChannelCredentials {
 }
 
 Future<String> exec(String cmd, name, xorKey) async {
-  print(certPath);
-  final cert = File(certPath).readAsBytesSync();
-  final key = File(keyPath).readAsBytesSync();
-  final clientCert = File(clientCertPath).readAsBytesSync();
-  final clientKey = File(clientKeyPath).readAsBytesSync();
-  print(cert);
+  //final cert = File(certPath).readAsBytesSync();
 
-    final channelContext =
-        SecurityContextChannelCredentials.baseSecurityContext();
-    channelContext.useCertificateChain('test/data/localhost.crt');
-    channelContext.usePrivateKey('test/data/localhost.key');
-    final channelCredentials = SecurityContextChannelCredentials(channelContext,
-        onBadCertificate: (cert, s) {
-      return true;
-    });
+  final channelContext =
+      SecurityContextChannelCredentials.baseSecurityContext();
+  channelContext.useCertificateChain(clientCertPath);
+  channelContext.usePrivateKey(clientKeyPath);
+  final channelCredentials = SecurityContextChannelCredentials(channelContext,
+      onBadCertificate: (cert, s) {
+    return true;
+  });
   final channel = ClientChannel(
     'localhost', // todo: address to Translator
     port: 50051,
     options: ChannelOptions(
-//      credentials: ClientCertificateChannelCredentials(cert, key, ''),
-      credentials: ChannelCredentials.secure(
-//        certificates: cert, //File(certPath).readAsBytesSync(),
-//        authority: 'localhost',
-//        password: '',
-        onBadCertificate: allowBadCertificates,
-      ),
-      codecRegistry:
-          CodecRegistry(codecs: const [GzipCodec(), IdentityCodec()]),
-      //CodecRegistry(codecs: const [GzipCodec()]),
+      credentials: channelCredentials,
     ),
+    //CodecRegistry(codecs: const [GzipCodec()]),
   );
   final stub = AuthnServiceClient(channel,
       options: CallOptions(timeout: Duration(seconds: 5)));
@@ -235,7 +192,6 @@ Future<String> exec(String cmd, name, xorKey) async {
 
   var tokenPayload = '';
 
-  var callOps = CallOptions(compression: GzipCodec());
   try {
     print('for starts');
     await for (var cmdStat in stub.enter(
@@ -245,7 +201,6 @@ Future<String> exec(String cmd, name, xorKey) async {
         uRL: 'http://localhost:8090', // todo: argument/var
         aAGUID: '12c85a48-4baf-47bd-b51f-f192871a1511', // todo: argument/var
       ),
-      options: callOps,
       //options: CallOptions(compression: const GzipCodec()), // this works!!
     )) {
       print('status msg arrives: ${cmdStat.type}');
