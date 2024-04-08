@@ -18,6 +18,7 @@ Int64 keyHandleId = Int64(1);
 // URL: to contact aka WebAuthn server
 // aAGUID: our authn ID
 // salt: for pin code
+// Cert: all files // do we need only client files? how about bundle?
 
 // --- clean up ---
 // what happens when ..
@@ -68,7 +69,7 @@ class PemPair {
 }
 
 class Xorel {
-  int salt = 56;
+  int salt = 56; // todo:
   int key;
 
   Xorel(this.key, {this.salt = 0});
@@ -166,15 +167,15 @@ Future<String> exec(String cmd, name, xorKey) async {
 
   final channelContext =
       SecurityContextChannelCredentials.baseSecurityContext();
-  channelContext.useCertificateChain(clientCertPath);
-  channelContext.usePrivateKey(clientKeyPath);
+  channelContext.useCertificateChain(clientCertPath); // todo:
+  channelContext.usePrivateKey(clientKeyPath); // todo:
   final channelCredentials = SecurityContextChannelCredentials(channelContext,
       onBadCertificate: (cert, s) {
     return true;
   });
   final channel = ClientChannel(
     'localhost', // todo: address to Translator
-    port: 50051,
+    port: 50051, // todo:
     options: ChannelOptions(
       credentials: channelCredentials,
     ),
