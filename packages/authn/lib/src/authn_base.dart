@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:yaml/yaml.dart';
+
 import 'config.dart';
 import 'fido_command.dart';
 import 'command.dart';
@@ -22,6 +25,20 @@ void setupDefaults() {
   final baseCmd = Command('localhost', 50051);
   final fidoCmd = FidoCommand(
       'http://localhost:8090', '12c85a48-4baf-47bd-b51f-f192871a1511');
+  setDefs(cfg, baseCmd, fidoCmd);
+}
+
+void setupFromYAML(String filename) {
+  final data = File(filename).readAsStringSync();
+  Map map = loadYaml(data);
+  // to correct map type: <dynamic, dynamic> -> <string, dynamic>
+  Map<String, dynamic> yaml =
+      map.map((key, value) => MapEntry(key!.toString(), value));
+
+  final cfg = Config.loadMap(yaml);
+  final baseCmd = Command.loadMap(yaml);
+  final fidoCmd = FidoCommand.loadMap(yaml);
+
   setDefs(cfg, baseCmd, fidoCmd);
 }
 

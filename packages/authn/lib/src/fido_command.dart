@@ -12,4 +12,7 @@ class FidoCommand {
     this.jwt = '',
     this.origin = '',
   });
+
+  factory FidoCommand.loadMap(Map<String, dynamic> m) =>
+      FidoCommand(m['url'], m['aaguid']);
 }
