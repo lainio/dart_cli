@@ -1,5 +1,9 @@
 import 'dart:convert';
 
+import 'package:authn/src/command.dart';
+import 'package:authn/src/config.dart';
+import 'package:authn/src/fido_command.dart';
+
 import 'generated/authn.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 import 'package:fixnum/fixnum.dart'; // NOTE. for Int64
@@ -134,15 +138,14 @@ class Handle {
 }
 
 Handle? myHandle;
+Config? cfg;
+Command? baseCmd;
+FidoCommand? fidoCommand;
 
 const keyPath =
     '/home/parallels/go/src/github.com/findy-network/cert/server/server.key';
 const certPath =
     '/home/parallels/go/src/github.com/findy-network/cert/server/server.crt';
-const clientKeyPath =
-    '/home/parallels/go/src/github.com/findy-network/cert/client/client.key';
-const clientCertPath =
-    '/home/parallels/go/src/github.com/findy-network/cert/client/client.crt';
 
 // '/home/parallels/go/src/github.com/findy-network/cert/client/client.crt';
 
@@ -162,20 +165,30 @@ class SecurityContextChannelCredentials extends ChannelCredentials {
   }
 }
 
+void setDefs(Config c, Command base, FidoCommand fido) {
+  cfg = c;
+  baseCmd = base;
+  fidoCommand = fido;
+}
+
 Future<String> exec(String cmd, name, xorKey) async {
+  assert(cfg != null);
+  assert(baseCmd != null);
+  assert(fidoCommand != null);
+
   //final cert = File(certPath).readAsBytesSync();
 
   final channelContext =
       SecurityContextChannelCredentials.baseSecurityContext();
-  channelContext.useCertificateChain(clientCertPath); // todo:
-  channelContext.usePrivateKey(clientKeyPath); // todo:
+  channelContext.useCertificateChain(cfg!.certFile);
+  channelContext.usePrivateKey(cfg!.keyFile);
   final channelCredentials = SecurityContextChannelCredentials(channelContext,
       onBadCertificate: (cert, s) {
     return true;
   });
   final channel = ClientChannel(
-    'localhost', // todo: address to Translator
-    port: 50051, // todo:
+    baseCmd!.address,
+    port: baseCmd!.port,
     options: ChannelOptions(
       credentials: channelCredentials,
     ),
@@ -199,8 +212,8 @@ Future<String> exec(String cmd, name, xorKey) async {
       Cmd(
         type: myCMD, //type: Cmd_Type.REGISTER,
         userName: name,
-        uRL: 'http://localhost:8090', // todo: argument/var
-        aAGUID: '12c85a48-4baf-47bd-b51f-f192871a1511', // todo: argument/var
+        uRL: fidoCommand!.url, // todo: argument/var
+        aAGUID: fidoCommand!.aaguid, // todo: argument/var
       ),
       //options: CallOptions(compression: const GzipCodec()), // this works!!
     )) {
@@ -289,9 +302,14 @@ Future<String> exec(String cmd, name, xorKey) async {
   }
   await channel.shutdown();
 
-  final token = jsonDecode(tokenPayload);
-  final jwt = token['token'] as String;
-  return jwt;
+  switch (myCMD) {
+    case Cmd_Type.LOGIN:
+      final token = jsonDecode(tokenPayload);
+      final jwt = token['token'] as String;
+      return jwt;
+    default:
+      return 'Registering OK';
+  }
 }
 
 const int crvCOSE = -1;
