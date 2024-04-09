@@ -14,7 +14,7 @@ Future<void> main(List<String> args) async {
   final pin = args[2];
   print('cmd: $cmd, name: $name, keyID: $pin');
 
-  final jwt = await authnCmd(cmd, name, pin);
+  final jwt = await authnWithDefs(cmd, name, pin);
   print(jwt);
 
   return;
