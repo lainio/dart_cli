@@ -68,3 +68,16 @@ port: 50051
 url: http://localhost:8090
 aaguid: 12.....8-4..f-47.d-..1f-f192871a1511
 ```
+
+### Explanations:
+
+```yaml
+---
+keyFile: <tls-client-key-file> # see other documentation
+certFile: <tls-client-cert-file> # see other documentation
+salt: NN # two digit security salt
+address: <grpc-service-addr>
+port: <grpc-port>
+url: <FIDO2-server-URL> # e.g. http://localhost:8090
+aaguid: <your-authenticators-UUID> # just generate and keep the same
+```
