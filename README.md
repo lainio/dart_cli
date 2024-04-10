@@ -15,6 +15,16 @@ The actual package is in `packages/authn`. To use it add following to your
 
 See the [example file](./pubspec.yaml).
 
+## Run CLI
+
+Until you know where you gRPC translator to WebAuthn is up and running you enter
+something like this to the command-line in the repo's root:
+
+```shell
+dart bin/cli.dart login elli200 10 cfg.yaml
+dart bin/cli.dart login elli200 10
+```
+
 ## Flutter Usage
 
 The Authn package works with the Flutter as well. However, your deployment
