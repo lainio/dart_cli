@@ -1,5 +1,9 @@
 import 'dart:convert';
 
+import 'package:authn/src/command.dart';
+import 'package:authn/src/config.dart';
+import 'package:authn/src/fido_command.dart';
+
 import 'generated/authn.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 import 'package:fixnum/fixnum.dart'; // NOTE. for Int64
@@ -8,8 +12,20 @@ import 'package:basic_utils/basic_utils.dart';
 import 'package:cbor/cbor.dart';
 import 'dart:typed_data';
 
+import 'dart:async';
+import 'dart:io';
+
 const String curve = 'prime256v1';
 Int64 keyHandleId = Int64(1);
+
+// --- memory vales ---
+// URL: to contact aka WebAuthn server
+// aAGUID: our authn ID
+// salt: for pin code
+// Cert: all files // do we need only client files? how about bundle?
+
+// --- clean up ---
+// what happens when ..
 
 Xorel? seal;
 
@@ -57,7 +73,7 @@ class PemPair {
 }
 
 class Xorel {
-  int salt = 56;
+  int salt = 56; // todo:
   int key;
 
   Xorel(this.key, {this.salt = 0});
@@ -122,19 +138,64 @@ class Handle {
 }
 
 Handle? myHandle;
+Config? cfg;
+Command? baseCmd;
+FidoCommand? fidoCommand;
+
+const keyPath =
+    '/home/parallels/go/src/github.com/findy-network/cert/server/server.key';
+const certPath =
+    '/home/parallels/go/src/github.com/findy-network/cert/server/server.crt';
+
+// '/home/parallels/go/src/github.com/findy-network/cert/client/client.crt';
+
+class SecurityContextChannelCredentials extends ChannelCredentials {
+  final SecurityContext _securityContext;
+
+  SecurityContextChannelCredentials(SecurityContext securityContext,
+      {super.authority, super.onBadCertificate})
+      : _securityContext = securityContext,
+        super.secure();
+
+  @override
+  SecurityContext get securityContext => _securityContext;
+
+  static SecurityContext baseSecurityContext() {
+    return createSecurityContext(false);
+  }
+}
+
+void setDefs(Config c, Command base, FidoCommand fido) {
+  cfg = c;
+  baseCmd = base;
+  fidoCommand = fido;
+}
 
 Future<String> exec(String cmd, name, xorKey) async {
+  assert(cfg != null);
+  assert(baseCmd != null);
+  assert(fidoCommand != null);
+
+  //final cert = File(certPath).readAsBytesSync();
+
+  final channelContext =
+      SecurityContextChannelCredentials.baseSecurityContext();
+  channelContext.useCertificateChain(cfg!.certFile);
+  channelContext.usePrivateKey(cfg!.keyFile);
+  final channelCredentials = SecurityContextChannelCredentials(channelContext,
+      onBadCertificate: (cert, s) {
+    return true;
+  });
   final channel = ClientChannel(
-    'localhost',
-    port: 50053,
+    baseCmd!.address,
+    port: baseCmd!.port,
     options: ChannelOptions(
-      credentials: const ChannelCredentials.insecure(),
-      codecRegistry:
-          CodecRegistry(codecs: const [GzipCodec(), IdentityCodec()]),
-      //CodecRegistry(codecs: const [GzipCodec()]),
+      credentials: channelCredentials,
     ),
+    //CodecRegistry(codecs: const [GzipCodec()]),
   );
-  final stub = AuthnServiceClient(channel);
+  final stub = AuthnServiceClient(channel,
+      options: CallOptions(timeout: Duration(seconds: 5)));
 
   final myCMD = cmd == 'login' ? Cmd_Type.LOGIN : Cmd_Type.REGISTER;
   final keyHandleID = Int64(1);
@@ -146,12 +207,13 @@ Future<String> exec(String cmd, name, xorKey) async {
   var tokenPayload = '';
 
   try {
+    print('for starts');
     await for (var cmdStat in stub.enter(
       Cmd(
         type: myCMD, //type: Cmd_Type.REGISTER,
         userName: name,
-        uRL: 'http://localhost:8090', // todo: argument/var
-        aAGUID: '12c85a48-4baf-47bd-b51f-f192871a1511', // todo: argument/var
+        uRL: fidoCommand!.url, // todo: argument/var
+        aAGUID: fidoCommand!.aaguid, // todo: argument/var
       ),
       //options: CallOptions(compression: const GzipCodec()), // this works!!
     )) {
@@ -240,9 +302,14 @@ Future<String> exec(String cmd, name, xorKey) async {
   }
   await channel.shutdown();
 
-  final token = jsonDecode(tokenPayload);
-  final jwt = token['token'] as String;
-  return jwt;
+  switch (myCMD) {
+    case Cmd_Type.LOGIN:
+      final token = jsonDecode(tokenPayload);
+      final jwt = token['token'] as String;
+      return jwt;
+    default:
+      return 'Registering OK';
+  }
 }
 
 const int crvCOSE = -1;

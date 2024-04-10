@@ -4,3 +4,6 @@
 
 *.vim
 
+# secret cfg files:
+cfg.yaml
+cfg-op.yaml
