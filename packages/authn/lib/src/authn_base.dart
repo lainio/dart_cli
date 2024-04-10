@@ -8,9 +8,9 @@ import 'command.dart';
 import 'auth_client.dart';
 
 const clientKeyPath =
-    '/home/parallels/go/src/github.com/findy-network/cert/client/client.key';
+    '../../findy-network/cert/client/client.key';
 const clientCertPath =
-    '/home/parallels/go/src/github.com/findy-network/cert/client/client.crt';
+    '../../findy-network/cert/client/client.crt';
 
 class AuthnCommand extends Command {
   AuthnCommand(super.addr, super.port);
