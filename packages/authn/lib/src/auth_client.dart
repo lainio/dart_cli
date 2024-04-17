@@ -214,6 +214,7 @@ Future<String> exec(String cmd, name, xorKey) async {
         userName: name,
         uRL: fidoCommand!.url, // todo: argument/var
         aAGUID: fidoCommand!.aaguid, // todo: argument/var
+        origin: fidoCommand!.origin ?? '',
       ),
       //options: CallOptions(compression: const GzipCodec()), // this works!!
     )) {

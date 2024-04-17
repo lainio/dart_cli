@@ -3,14 +3,16 @@ import 'package:test/test.dart';
 
 void main() {
   group('A group of tests', () {
-    final awesome = Awesome();
+    final awesome = FidoCommand('test', 'aaguid', origin: 'origin');
 
     setUp(() {
       // Additional setup goes here.
     });
 
     test('First Test', () {
-      expect(awesome.isAwesome, isTrue);
+      expect(awesome.url, 'test');
+      expect(awesome.aaguid, 'aaguid');
+      expect(awesome.origin, 'origin');
     });
   });
 }
